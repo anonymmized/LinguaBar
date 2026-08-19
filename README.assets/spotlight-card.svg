@@ -1,0 +1,9 @@
+<svg width="980" height="126" viewBox="0 0 980 126" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="980" height="126" rx="22" fill="#11161D"/>
+  <rect x="1" y="1" width="978" height="124" rx="21" stroke="#2A313B" stroke-width="2"/>
+  <circle cx="35" cy="34" r="7" fill="#FF5F57"/>
+  <circle cx="58" cy="34" r="7" fill="#FFBD2E"/>
+  <circle cx="81" cy="34" r="7" fill="#28C840"/>
+  <text x="34" y="86" fill="#8BD5FF" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="22" font-weight="700">$</text>
+  <text x="70" y="86" fill="#F2F6FA" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="22" font-weight="600">mdimport /Applications/LinguaBar.app</text>
+</svg>

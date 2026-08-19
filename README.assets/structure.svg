@@ -1,0 +1,18 @@
+<svg width="980" height="520" viewBox="0 0 980 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="980" height="520" rx="22" fill="#11161D"/>
+  <rect x="1" y="1" width="978" height="518" rx="21" stroke="#2A313B" stroke-width="2"/>
+  <circle cx="35" cy="34" r="7" fill="#FF5F57"/>
+  <circle cx="58" cy="34" r="7" fill="#FFBD2E"/>
+  <circle cx="81" cy="34" r="7" fill="#28C840"/>
+  <text x="34" y="88" fill="#F2F6FA" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="600">.</text>
+  <text x="34" y="126" fill="#F2F6FA" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="600">├── Assets</text>
+  <text x="34" y="164" fill="#AAB3C2" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="600">│   ├── LinguaBar.icns</text>
+  <text x="34" y="202" fill="#AAB3C2" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="600">│   └── LinguaBarIcon.png</text>
+  <text x="34" y="240" fill="#F2F6FA" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="600">├── Package.swift</text>
+  <text x="34" y="278" fill="#F2F6FA" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="600">├── Resources / Info.plist</text>
+  <text x="34" y="316" fill="#F2F6FA" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="600">├── Sources / LinguaBar / main.swift</text>
+  <text x="34" y="354" fill="#F2F6FA" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="600">├── README.assets</text>
+  <text x="34" y="392" fill="#AAB3C2" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="600">│   ├── icon.png</text>
+  <text x="34" y="430" fill="#AAB3C2" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="600">│   └── preview.svg</text>
+  <text x="34" y="468" fill="#F2F6FA" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="21" font-weight="600">└── scripts / build_app.sh / install_app.sh</text>
+</svg>

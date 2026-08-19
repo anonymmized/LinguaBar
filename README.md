@@ -41,10 +41,9 @@ LinguaBar is built for quick translation without opening a browser tab. It stays
 
 Build, sign, install into `/Applications`, and open LinguaBar:
 
-```bash
-chmod +x scripts/install_app.sh
-./scripts/install_app.sh
-```
+<p>
+  <img src="README.assets/install-card.svg" alt="Install LinguaBar command">
+</p>
 
 After installation, macOS can open it from:
 
@@ -52,28 +51,27 @@ After installation, macOS can open it from:
 - Spotlight: search `LinguaBar`
 - Terminal:
 
-```bash
-open /Applications/LinguaBar.app
-```
+<p>
+  <img src="README.assets/open-card.svg" alt="Open LinguaBar from Applications">
+</p>
 
 If Spotlight does not show it immediately, wait a minute for indexing or run:
 
-```bash
-mdimport /Applications/LinguaBar.app
-```
+<p>
+  <img src="README.assets/spotlight-card.svg" alt="Index LinguaBar with Spotlight">
+</p>
 
 ## Build Only
 
-```bash
-chmod +x scripts/build_app.sh
-./scripts/build_app.sh
-```
+<p>
+  <img src="README.assets/build-card.svg" alt="Build LinguaBar command">
+</p>
 
 The app bundle will be created at:
 
-```text
-build/LinguaBar.app
-```
+<p>
+  <img src="README.assets/output-card.svg" alt="LinguaBar build output path">
+</p>
 
 ## Usage
 
@@ -95,24 +93,9 @@ LinguaBar includes a compact settings panel for:
 
 ## Project Structure
 
-```text
-.
-├── Assets
-│   ├── LinguaBar.icns
-│   └── LinguaBarIcon.png
-├── Package.swift
-├── README.assets
-│   ├── icon.png
-│   └── preview.svg
-├── Resources
-│   └── Info.plist
-├── Sources
-│   └── LinguaBar
-│       └── main.swift
-└── scripts
-    ├── build_app.sh
-    └── install_app.sh
-```
+<p>
+  <img src="README.assets/structure.svg" alt="LinguaBar project structure">
+</p>
 
 ## Distribution Note
 
