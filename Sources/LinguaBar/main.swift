@@ -16,6 +16,38 @@ private let languages: [Language] = [
     Language(name: "Español", shortName: "ES", code: "es")
 ]
 
+@MainActor
+private final class AppSettings {
+    static let shared = AppSettings()
+
+    private enum Key {
+        static let showOnLaunch = "showOnLaunch"
+        static let autoHide = "autoHide"
+        static let autoTranslate = "autoTranslate"
+    }
+
+    private let defaults = UserDefaults.standard
+
+    var showOnLaunch: Bool {
+        get { value(for: Key.showOnLaunch, defaultValue: true) }
+        set { defaults.set(newValue, forKey: Key.showOnLaunch) }
+    }
+
+    var autoHide: Bool {
+        get { value(for: Key.autoHide, defaultValue: true) }
+        set { defaults.set(newValue, forKey: Key.autoHide) }
+    }
+
+    var autoTranslate: Bool {
+        get { value(for: Key.autoTranslate, defaultValue: true) }
+        set { defaults.set(newValue, forKey: Key.autoTranslate) }
+    }
+
+    private func value(for key: String, defaultValue: Bool) -> Bool {
+        defaults.object(forKey: key) == nil ? defaultValue : defaults.bool(forKey: key)
+    }
+}
+
 private final class TranslationService: @unchecked Sendable {
     enum TranslationError: Error {
         case emptyText
@@ -119,7 +151,9 @@ private final class LocalPhrasebook: Sendable {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let translator = TranslationService()
+    private let settings = AppSettings.shared
     private var windowController: TranslatorWindowController?
+    private var settingsWindowController: SettingsWindowController?
     private var hotKeyRef: EventHotKeyRef?
     private var eventHandlerRef: EventHandlerRef?
 
@@ -129,8 +163,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         configureStatusItem()
         registerHotKey()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
-            self?.showTranslator()
+        if settings.showOnLaunch {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+                self?.showTranslator()
+            }
         }
     }
 
@@ -144,7 +180,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidResignActive(_ notification: Notification) {
-        hideTranslator()
+        if settings.autoHide {
+            hideTranslator()
+        }
     }
 
     private func configureStatusItem() {
@@ -155,6 +193,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             button.action = #selector(toggleTranslator)
             button.target = self
             button.toolTip = "LinguaBar Translator"
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             NSLog("LinguaBar: status item configured")
         }
     }
@@ -222,17 +261,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showStatusMenu() {
         let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "Открыть переводчик", action: #selector(showTranslator), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Скрыть", action: #selector(hideTranslator), keyEquivalent: ""))
+        let visibilityTitle = windowController?.window?.isVisible == true ? "Скрыть переводчик" : "Открыть переводчик"
+        menu.addItem(NSMenuItem(title: visibilityTitle, action: #selector(toggleTranslatorFromMenu), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Настройки...", action: #selector(showSettings), keyEquivalent: ","))
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Выйти", action: #selector(quit), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Выйти из LinguaBar", action: #selector(quit), keyEquivalent: "q"))
         menu.items.forEach { $0.target = self }
-        statusItem.popUpMenu(menu)
+
+        statusItem.menu = menu
+        statusItem.button?.performClick(nil)
+        statusItem.menu = nil
+    }
+
+    @objc private func toggleTranslatorFromMenu() {
+        if let window = windowController?.window, window.isVisible {
+            hideTranslator()
+        } else {
+            showTranslator()
+        }
     }
 
     @objc private func showTranslator() {
         if windowController == nil {
-            windowController = TranslatorWindowController(translator: translator)
+            windowController = TranslatorWindowController(translator: translator, settings: settings)
         }
 
         guard let controller = windowController, let button = statusItem.button else { return }
@@ -241,6 +292,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func hideTranslator() {
         windowController?.close()
+    }
+
+    @objc private func showSettings() {
+        if settingsWindowController == nil {
+            settingsWindowController = SettingsWindowController(settings: settings)
+        }
+
+        settingsWindowController?.show()
     }
 
     @objc private func quit() {
@@ -286,6 +345,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @MainActor
 private final class TranslatorWindowController: NSWindowController {
     private let translator: TranslationService
+    private let settings: AppSettings
     private let sourcePopup = NSPopUpButton()
     private let targetPopup = NSPopUpButton()
     private let inputView = NSTextView()
@@ -296,8 +356,9 @@ private final class TranslatorWindowController: NSWindowController {
     private let copyButton = NSButton(title: "Скопировать", target: nil, action: nil)
     private var translateTask: Task<Void, Never>?
 
-    init(translator: TranslationService) {
+    init(translator: TranslationService, settings: AppSettings) {
         self.translator = translator
+        self.settings = settings
         let contentSize = NSSize(width: 390, height: 246)
         let window = NSPanel(
             contentRect: NSRect(origin: .zero, size: contentSize),
@@ -314,7 +375,7 @@ private final class TranslatorWindowController: NSWindowController {
         window.isMovableByWindowBackground = true
         window.level = .statusBar
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .ignoresCycle]
-        window.hidesOnDeactivate = true
+        window.hidesOnDeactivate = settings.autoHide
         window.isFloatingPanel = true
         window.minSize = contentSize
         window.maxSize = contentSize
@@ -509,6 +570,8 @@ private final class TranslatorWindowController: NSWindowController {
     }
 
     private func scheduleTranslation() {
+        guard settings.autoTranslate else { return }
+
         translateTask?.cancel()
         translateTask = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(450))
@@ -560,6 +623,230 @@ private final class TranslatorWindowController: NSWindowController {
 extension TranslatorWindowController: NSTextViewDelegate {
     func textDidChange(_ notification: Notification) {
         scheduleTranslation()
+    }
+}
+
+@MainActor
+private final class SettingsWindowController: NSWindowController {
+    private let settings: AppSettings
+    private let showOnLaunchButton = NSButton(checkboxWithTitle: "Показывать окно при запуске", target: nil, action: nil)
+    private let autoHideButton = NSButton(checkboxWithTitle: "Скрывать при переходе в другое приложение", target: nil, action: nil)
+    private let autoTranslateButton = NSButton(checkboxWithTitle: "Переводить автоматически", target: nil, action: nil)
+
+    init(settings: AppSettings) {
+        self.settings = settings
+
+        let contentSize = NSSize(width: 390, height: 300)
+        let window = NSPanel(
+            contentRect: NSRect(origin: .zero, size: contentSize),
+            styleMask: [.titled, .closable, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "Настройки"
+        window.titleVisibility = .visible
+        window.titlebarAppearsTransparent = true
+        window.backgroundColor = .clear
+        window.isOpaque = false
+        window.isReleasedWhenClosed = false
+        window.level = .floating
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        window.minSize = contentSize
+        window.maxSize = contentSize
+
+        super.init(window: window)
+        buildInterface()
+        syncState()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func show() {
+        guard let window else { return }
+        window.center()
+        showWindow(nil)
+        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private func buildInterface() {
+        guard let contentView = window?.contentView else { return }
+
+        let visualEffect = NSVisualEffectView()
+        visualEffect.material = .hudWindow
+        visualEffect.blendingMode = .behindWindow
+        visualEffect.state = .active
+        visualEffect.wantsLayer = true
+        visualEffect.layer?.cornerRadius = 14
+        visualEffect.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(visualEffect)
+
+        let root = NSStackView()
+        root.orientation = .vertical
+        root.spacing = 14
+        root.edgeInsets = NSEdgeInsets(top: 40, left: 18, bottom: 18, right: 18)
+        root.translatesAutoresizingMaskIntoConstraints = false
+        visualEffect.addSubview(root)
+
+        NSLayoutConstraint.activate([
+            visualEffect.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            visualEffect.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            visualEffect.topAnchor.constraint(equalTo: contentView.topAnchor),
+            visualEffect.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            root.leadingAnchor.constraint(equalTo: visualEffect.leadingAnchor),
+            root.trailingAnchor.constraint(equalTo: visualEffect.trailingAnchor),
+            root.topAnchor.constraint(equalTo: visualEffect.topAnchor),
+            root.bottomAnchor.constraint(equalTo: visualEffect.bottomAnchor)
+        ])
+
+        let header = makeHeader()
+        let options = makeOptionsBox()
+        let hotkey = makeInfoRow(title: "Горячая клавиша", value: "Command + Option + T")
+        let service = makeInfoRow(title: "Сервис", value: "MyMemory + локальный словарь")
+
+        let footer = NSStackView()
+        footer.orientation = .horizontal
+        footer.alignment = .centerY
+        footer.spacing = 10
+
+        let versionLabel = NSTextField(labelWithString: "LinguaBar 1.0")
+        versionLabel.font = .systemFont(ofSize: 11, weight: .medium)
+        versionLabel.textColor = .tertiaryLabelColor
+
+        let quitButton = NSButton(title: "Выйти", target: self, action: #selector(quitApp))
+        quitButton.bezelStyle = .rounded
+        quitButton.controlSize = .regular
+        quitButton.font = .systemFont(ofSize: 12, weight: .semibold)
+
+        footer.addArrangedSubview(versionLabel)
+        footer.addArrangedSubview(NSView())
+        footer.addArrangedSubview(quitButton)
+
+        root.addArrangedSubview(header)
+        root.addArrangedSubview(options)
+        root.addArrangedSubview(hotkey)
+        root.addArrangedSubview(service)
+        root.addArrangedSubview(NSView())
+        root.addArrangedSubview(footer)
+    }
+
+    private func makeHeader() -> NSView {
+        let row = NSStackView()
+        row.orientation = .horizontal
+        row.spacing = 10
+        row.alignment = .centerY
+
+        let logo = NSImageView(image: makeSettingsLogo())
+        logo.translatesAutoresizingMaskIntoConstraints = false
+        logo.widthAnchor.constraint(equalToConstant: 34).isActive = true
+        logo.heightAnchor.constraint(equalToConstant: 34).isActive = true
+
+        let textStack = NSStackView()
+        textStack.orientation = .vertical
+        textStack.spacing = 1
+
+        let title = NSTextField(labelWithString: "LinguaBar")
+        title.font = .systemFont(ofSize: 18, weight: .bold)
+        title.textColor = .labelColor
+
+        let subtitle = NSTextField(labelWithString: "быстрый переводчик в строке меню")
+        subtitle.font = .systemFont(ofSize: 12, weight: .medium)
+        subtitle.textColor = .secondaryLabelColor
+
+        textStack.addArrangedSubview(title)
+        textStack.addArrangedSubview(subtitle)
+
+        row.addArrangedSubview(logo)
+        row.addArrangedSubview(textStack)
+        row.addArrangedSubview(NSView())
+        return row
+    }
+
+    private func makeOptionsBox() -> NSView {
+        let stack = NSStackView()
+        stack.orientation = .vertical
+        stack.spacing = 8
+        stack.edgeInsets = NSEdgeInsets(top: 10, left: 12, bottom: 10, right: 12)
+        stack.wantsLayer = true
+        stack.layer?.cornerRadius = 10
+        stack.layer?.backgroundColor = NSColor.controlBackgroundColor.withAlphaComponent(0.42).cgColor
+
+        [showOnLaunchButton, autoHideButton, autoTranslateButton].forEach {
+            $0.target = self
+            $0.action = #selector(settingsChanged)
+            $0.font = .systemFont(ofSize: 12, weight: .medium)
+            stack.addArrangedSubview($0)
+        }
+
+        return stack
+    }
+
+    private func makeInfoRow(title: String, value: String) -> NSView {
+        let row = NSStackView()
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 10
+
+        let titleLabel = NSTextField(labelWithString: title)
+        titleLabel.font = .systemFont(ofSize: 12, weight: .medium)
+        titleLabel.textColor = .secondaryLabelColor
+
+        let valueLabel = NSTextField(labelWithString: value)
+        valueLabel.font = .systemFont(ofSize: 12, weight: .semibold)
+        valueLabel.textColor = .labelColor
+
+        row.addArrangedSubview(titleLabel)
+        row.addArrangedSubview(NSView())
+        row.addArrangedSubview(valueLabel)
+        return row
+    }
+
+    private func syncState() {
+        showOnLaunchButton.state = settings.showOnLaunch ? .on : .off
+        autoHideButton.state = settings.autoHide ? .on : .off
+        autoTranslateButton.state = settings.autoTranslate ? .on : .off
+    }
+
+    @objc private func settingsChanged() {
+        settings.showOnLaunch = showOnLaunchButton.state == .on
+        settings.autoHide = autoHideButton.state == .on
+        settings.autoTranslate = autoTranslateButton.state == .on
+    }
+
+    @objc private func quitApp() {
+        NSApp.terminate(nil)
+    }
+
+    private func makeSettingsLogo() -> NSImage {
+        let image = NSImage(size: NSSize(width: 34, height: 34))
+        image.lockFocus()
+
+        let rect = NSRect(x: 1, y: 1, width: 32, height: 32)
+        NSColor.systemPink.setFill()
+        NSBezierPath(roundedRect: rect, xRadius: 9, yRadius: 9).fill()
+
+        let bubble = NSBezierPath(roundedRect: NSRect(x: 8, y: 10, width: 18, height: 15), xRadius: 4, yRadius: 4)
+        NSColor.white.setStroke()
+        bubble.lineWidth = 2
+        bubble.stroke()
+
+        let letter = NSBezierPath()
+        letter.move(to: NSPoint(x: 12, y: 13))
+        letter.line(to: NSPoint(x: 17, y: 22))
+        letter.line(to: NSPoint(x: 22, y: 13))
+        letter.move(to: NSPoint(x: 14, y: 16.2))
+        letter.line(to: NSPoint(x: 20, y: 16.2))
+        NSColor.white.setStroke()
+        letter.lineWidth = 2
+        letter.lineCapStyle = .round
+        letter.lineJoinStyle = .round
+        letter.stroke()
+
+        image.unlockFocus()
+        return image
     }
 }
 

@@ -12,6 +12,8 @@ It stays in the macOS status bar, opens as a compact floating translator panel, 
 - Auto-hide when switching to another app
 - Native macOS window controls
 - Custom menu bar logo
+- Secondary click menu with settings and quit
+- Settings for launch behavior, auto-hide, and auto-translation
 - Translation between:
   - Russian
   - English
@@ -52,6 +54,12 @@ open build/LinguaBar.app
 ```
 
 After launch, LinguaBar appears in the top menu bar. Press `Command + Option + T` to show or hide the translator window.
+
+Secondary click the menu bar icon to open the menu:
+
+- open or hide the translator
+- open settings
+- quit LinguaBar completely
 
 ## Project Structure
 
