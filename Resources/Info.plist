@@ -6,6 +6,8 @@
     <string>ru</string>
     <key>CFBundleExecutable</key>
     <string>LinguaBar</string>
+    <key>CFBundleIconFile</key>
+    <string>LinguaBar</string>
     <key>CFBundleIdentifier</key>
     <string>local.linguabar.translator</string>
     <key>CFBundleInfoDictionaryVersion</key>

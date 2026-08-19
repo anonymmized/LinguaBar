@@ -1,40 +1,68 @@
-# LinguaBar
+<p align="center">
+  <img src="README.assets/icon.png" width="132" alt="LinguaBar app icon">
+</p>
 
-LinguaBar is a lightweight macOS menu bar translator built with Swift and AppKit.
+<h1 align="center">LinguaBar</h1>
 
-It stays in the macOS status bar, opens as a compact floating translator panel, and can be shown or hidden instantly with a global hotkey.
+<p align="center">
+  A tiny, elegant translator that lives in your macOS menu bar.
+</p>
+
+<p align="center">
+  <img alt="macOS" src="https://img.shields.io/badge/macOS-13%2B-111111?style=for-the-badge&logo=apple&logoColor=white">
+  <img alt="Swift" src="https://img.shields.io/badge/Swift-6-FA7343?style=for-the-badge&logo=swift&logoColor=white">
+  <img alt="AppKit" src="https://img.shields.io/badge/AppKit-native-FF4F63?style=for-the-badge">
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-2C2D31?style=for-the-badge">
+</p>
+
+<p align="center">
+  <img src="README.assets/preview.svg" alt="LinguaBar preview">
+</p>
+
+## Why LinguaBar
+
+LinguaBar is built for quick translation without opening a browser tab. It stays out of the Dock, sits in the macOS menu bar, and opens as a compact HUD-style panel when you need it.
 
 ## Features
 
-- macOS menu bar app with no Dock icon
-- Compact HUD-style translator window
-- Global shortcut: `Command + Option + T`
-- Auto-hide when switching to another app
+- Lives in the macOS menu bar
+- Opens and hides with `Command + Option + T`
+- Auto-hides when you switch to another app
+- Secondary click menu for settings and quit
 - Native macOS window controls
-- Custom menu bar logo
-- Secondary click menu with settings and quit
-- Settings for launch behavior, auto-hide, and auto-translation
-- Translation between:
-  - Russian
-  - English
-  - French
-  - Italian
-  - Spanish
-- Auto-translation after typing
-- Language swap
-- Copy translated text
-- Tiny app bundle, around a few hundred KB
+- Custom Finder, Spotlight, and menu bar icon
+- Compact blur/HUD interface
+- Auto-translation while typing
+- Language swap and copy action
+- Translation between Russian, English, French, Italian, and Spanish
+- MyMemory online translation with a small local phrasebook fallback
 
-## Preview
+## Install For Finder And Spotlight
 
-LinguaBar is designed to behave like a small system utility: open it, translate, and let it disappear when you continue working elsewhere.
+Build, sign, install into `/Applications`, and open LinguaBar:
 
-## Requirements
+```bash
+chmod +x scripts/install_app.sh
+./scripts/install_app.sh
+```
 
-- macOS 13 or newer
-- Swift 6 toolchain or recent Xcode Command Line Tools
+After installation, macOS can open it from:
 
-## Build
+- Finder: `/Applications/LinguaBar.app`
+- Spotlight: search `LinguaBar`
+- Terminal:
+
+```bash
+open /Applications/LinguaBar.app
+```
+
+If Spotlight does not show it immediately, wait a minute for indexing or run:
+
+```bash
+mdimport /Applications/LinguaBar.app
+```
+
+## Build Only
 
 ```bash
 chmod +x scripts/build_app.sh
@@ -47,13 +75,9 @@ The app bundle will be created at:
 build/LinguaBar.app
 ```
 
-## Run
+## Usage
 
-```bash
-open build/LinguaBar.app
-```
-
-After launch, LinguaBar appears in the top menu bar. Press `Command + Option + T` to show or hide the translator window.
+Press `Command + Option + T` to show or hide the translator window.
 
 Secondary click the menu bar icon to open the menu:
 
@@ -61,25 +85,38 @@ Secondary click the menu bar icon to open the menu:
 - open settings
 - quit LinguaBar completely
 
+## Settings
+
+LinguaBar includes a compact settings panel for:
+
+- showing the translator on launch
+- hiding the translator when another app is selected
+- automatic translation while typing
+
 ## Project Structure
 
 ```text
 .
+├── Assets
+│   ├── LinguaBar.icns
+│   └── LinguaBarIcon.png
 ├── Package.swift
+├── README.assets
+│   ├── icon.png
+│   └── preview.svg
 ├── Resources
 │   └── Info.plist
 ├── Sources
 │   └── LinguaBar
 │       └── main.swift
 └── scripts
-    └── build_app.sh
+    ├── build_app.sh
+    └── install_app.sh
 ```
 
-## Notes
+## Distribution Note
 
-LinguaBar uses the MyMemory translation endpoint for online translation and includes a small local phrasebook fallback for common phrases.
-
-The app is ad-hoc signed during local builds. For public distribution outside your own machine, use a proper Apple Developer ID certificate and notarization.
+Local builds are ad-hoc signed. That is enough for personal use, Finder, and Spotlight installation on your own Mac. For public distribution, sign with an Apple Developer ID certificate and notarize the app.
 
 ## License
 

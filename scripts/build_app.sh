@@ -16,6 +16,7 @@ mkdir -p "$MACOS_DIR"
 mkdir -p "$RESOURCES_DIR"
 cp ".build/release/LinguaBar" "$MACOS_DIR/LinguaBar"
 cp "Resources/Info.plist" "$CONTENTS_DIR/Info.plist"
+cp "Assets/LinguaBar.icns" "$RESOURCES_DIR/LinguaBar.icns"
 chmod +x "$MACOS_DIR/LinguaBar"
 
 echo "$APP_DIR"
